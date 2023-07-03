@@ -38,7 +38,7 @@ def get_counts(uniq_items, input_df):
     query = " & ".join([f"({i} == 1)" for i in uniq_items.split("|")])
     return len(input_df.query(query))
 
-def refine_control_frequencies(all_sig_case_cont_freqitems_df, apriori_input_controls_df,number_of_controls):
+def refine_control_frequencies(all_sig_case_cont_freqitems_df, apriori_input_controls_df,number_of_controls,check_enrichment=True):
     # Check if zero frequency cases exist in controls
     cont_combos_w_zero_freq_df = all_sig_case_cont_freqitems_df.loc[all_sig_case_cont_freqitems_df["Cont_Obs_Count_Combo"] == 0]
     zero_freq_combo_count = cont_combos_w_zero_freq_df.shape[0]
@@ -48,7 +48,11 @@ def refine_control_frequencies(all_sig_case_cont_freqitems_df, apriori_input_con
         # for the zero frequency combos in controls, get their actual combo size
         cont_combos_w_zero_freq_df["Cont_Obs_Count_Combo"] = cont_combos_w_zero_freq_df.uniq_items.apply(get_counts, args=(apriori_input_controls_df, ))
         cont_combos_w_zero_freq_df["Cont_Obs_Prob_Combo"] = cont_combos_w_zero_freq_df['Cont_Obs_Count_Combo'] / number_of_controls
-        cont_combos_w_zero_freq_df['Cont_pvalue_more'] = cont_combos_w_zero_freq_df.apply(lambda row: binomtest(int(row['Cont_Obs_Count_Combo']), number_of_controls, row['Cont_Exp_Prob_Combo'], alternative='greater').pvalue, axis=1)
+        if check_enrichment:
+            cont_combos_w_zero_freq_df['Cont_pvalue_more'] = cont_combos_w_zero_freq_df.apply(lambda row: binomtest(int(row['Cont_Obs_Count_Combo']), number_of_controls, row['Cont_Exp_Prob_Combo'], alternative='greater').pvalue, axis=1)
+        else:
+            # check for depletion
+            cont_combos_w_zero_freq_df['Cont_pvalue_less'] = cont_combos_w_zero_freq_df.apply(lambda row: binomtest(int(row['Cont_Obs_Count_Combo']), number_of_controls, row['Cont_Exp_Prob_Combo'], alternative='less').pvalue, axis=1)
         # rewrite the items in the main df
         all_sig_case_cont_freqitems_df.update(cont_combos_w_zero_freq_df)
     return all_sig_case_cont_freqitems_df

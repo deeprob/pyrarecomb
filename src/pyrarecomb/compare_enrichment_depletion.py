@@ -8,7 +8,7 @@ from run_apriori_freqitems import run_apriori_freqitems
 import helpers as hp
 
 
-def compare_enrichment(
+def compare_enrichment_depletion(
         boolean_input_df, combo_length, input_format, output_format, min_indv_threshold, max_freq_threshold,
         pval_filter_threshold, adj_pval_type, min_power_threshold, sample_names_ind
         ):
@@ -72,7 +72,7 @@ def compare_enrichment(
     # Get the observed probability of observing the combos
     case_cont_freqitems_df['Cont_Obs_Prob_Combo'] = case_cont_freqitems_df['Cont_Obs_Count_Combo'] / number_of_controls
     # Using bionomial test, calculate p-value
-    case_cont_freqitems_df['Cont_pvalue_more'] = case_cont_freqitems_df.apply(lambda row: binomtest(int(row['Cont_Obs_Count_Combo']), number_of_controls, row['Cont_Exp_Prob_Combo'], alternative='greater').pvalue, axis=1)
+    case_cont_freqitems_df['Cont_pvalue_less'] = case_cont_freqitems_df.apply(lambda row: binomtest(int(row['Cont_Obs_Count_Combo']), number_of_controls, row['Cont_Exp_Prob_Combo'], alternative='less').pvalue, axis=1)
     # debugging
     print(f"Number of controls: {number_of_controls}")
     print(f"Number of combinations with support of at least 2 in controls: {cont_freqitems_df.shape[0]}")
@@ -80,16 +80,10 @@ def compare_enrichment(
     ########################
     # Nominal significance #
     ########################
-    # get cases where case pvalue and control pvalue are both significant
-    filt_case_cont_freqitems_df = case_cont_freqitems_df.loc[(case_cont_freqitems_df['Case_pvalue_more'] < pval_filter_threshold) &
-                                                            (case_cont_freqitems_df['Cont_pvalue_more'] < pval_filter_threshold)
-                                                            ]
-    # get cases where either case pvalue or control pvalue are not significant                   
-    sel_case_cont_freqitems_df = case_cont_freqitems_df.loc[~((case_cont_freqitems_df['Case_pvalue_more'] < pval_filter_threshold) &
-                                                            (case_cont_freqitems_df['Cont_pvalue_more'] < pval_filter_threshold))
-                                                            ]
+    # TODO: This step is not omitted from compare_enrichment_depletion since we
+    # TODO: consider all for multiple testing.
+    sel_case_cont_freqitems_df = case_cont_freqitems_df
     # debugging
-    print(f"Number of combinations that are enriched in both cases and controls: {filt_case_cont_freqitems_df.shape[0]}")
     print(f"Number of combinations considered for multiple testing correction: {sel_case_cont_freqitems_df.shape[0]}")
 
     ####################
@@ -106,12 +100,12 @@ def compare_enrichment(
     if adj_pval_type == 'BH':
         all_sig_case_cont_freqitems_df = sel_case_cont_freqitems_df[
             (sel_case_cont_freqitems_df['Case_Adj_Pval_BH'] < pval_filter_threshold) &
-            (sel_case_cont_freqitems_df['Cont_pvalue_more'] > pval_filter_threshold)
+            (sel_case_cont_freqitems_df['Cont_pvalue_less'] < pval_filter_threshold)
         ]
     elif adj_pval_type == 'bonferroni':
         all_sig_case_cont_freqitems_df = sel_case_cont_freqitems_df[
             (sel_case_cont_freqitems_df['Case_Adj_Pval_bonf'] < pval_filter_threshold) &
-            (sel_case_cont_freqitems_df['Cont_pvalue_more'] > pval_filter_threshold)
+            (sel_case_cont_freqitems_df['Cont_pvalue_less'] < pval_filter_threshold)
         ]
     multtest_sig_comb_count = all_sig_case_cont_freqitems_df.shape[0]
     # debugging
@@ -122,8 +116,7 @@ def compare_enrichment(
     ###################
     # Check if there is at least a single significant combination after multiple testing correction
     if multtest_sig_comb_count > 0:
-        # TODO: Refining control frequencies may not be required if support is changed to 1/num_controls for combos
-        all_sig_case_cont_freqitems_df = hp.refine_control_frequencies(all_sig_case_cont_freqitems_df, apriori_input_controls_df,number_of_controls)
+        all_sig_case_cont_freqitems_df = hp.refine_control_frequencies(all_sig_case_cont_freqitems_df, apriori_input_controls_df,number_of_controls,check_enrichment=False)
 
         ######################
         # POWER CALCULATIONS #
@@ -167,7 +160,7 @@ if __name__ == "__main__":
     min_power_threshold = 0.7
     sample_names_ind = 'Y'
 
-    compare_enrichment(
+    compare_enrichment_depletion(
         boolean_input_df, combo_length, input_format, output_format, min_indv_threshold, max_freq_threshold,
         pval_filter_threshold, adj_pval_type, min_power_threshold, sample_names_ind
         )
