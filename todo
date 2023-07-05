@@ -1,11 +1,12 @@
-v1.1.0
+v0.0.1
 1. compare enrichment modifiers function
 
-v2.0.0
+v0.1.1
 1. Refining control frequencies step may not be required
 2. After filter, introduce raise ValueError step if there is no data
 3. Create function for getting exp and obs prob for combos
 4. Create function for calculating p values
 5. Discuss the nominal significance filtration strategy
 6. Create multiple testing function
-7. 
+7. Rounding adjusted p-values to 3 digits not a good idea
+8. compare enrichment modifiers why are we checking for primary entities only as consequents?
