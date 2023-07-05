@@ -1,6 +1,4 @@
-import numpy as np
 import pandas as pd
-from collections import Counter
 from scipy.stats import binomtest
 from statsmodels.stats.multitest import multipletests
 
@@ -97,9 +95,9 @@ def compare_enrichment(
     ####################
     # Create variable for number of tests done
     number_of_tests = sel_case_cont_freqitems_df.shape[0]
-    # multiple test BH and Bonferroni
-    sel_case_cont_freqitems_df['Case_Adj_Pval_bonf'] = multipletests(sel_case_cont_freqitems_df['Case_pvalue_more'].values, method='bonferroni')[1]
-    sel_case_cont_freqitems_df['Case_Adj_Pval_BH'] = multipletests(sel_case_cont_freqitems_df['Case_pvalue_more'].values, method='fdr_bh')[1]
+    # multiple test BH and Bonferroni - round to 3 places of decimal will change in later versions
+    sel_case_cont_freqitems_df['Case_Adj_Pval_bonf'] = np.round(multipletests(sel_case_cont_freqitems_df['Case_pvalue_more'].values, method='bonferroni')[1], 3)
+    sel_case_cont_freqitems_df['Case_Adj_Pval_BH'] = np.round(multipletests(sel_case_cont_freqitems_df['Case_pvalue_more'].values, method='fdr_bh')[1], 3)
     # add a column for number of tests done
     sel_case_cont_freqitems_df['Num_tests'] = number_of_tests
     # filter significant items
