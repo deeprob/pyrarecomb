@@ -1,6 +1,0 @@
-mlxtend
-pandas
-statsmodels
-jupyter
-ipykernel
-scikit-learn
