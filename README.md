@@ -1,5 +1,5 @@
 # Pythonic version of RareComb
-RareComb is a tool to find oligogenic combinations of genes with rare variants that are enriched in individuals with a specific phenotype. RareComb is orginally developed in R (https://github.com/girirajanlab/RareComb). Here we provide a pythonic version of RareComb with some additional utilities.
+RareComb is a tool to find oligogenic combinations of genes with rare variants that are enriched in individuals with a specific phenotype. RareComb was orginally developed in R (https://github.com/girirajanlab/RareComb). Here we provide a pythonic version of RareComb with some additional utilities.
 
 # Installation
 ```bash
@@ -36,6 +36,9 @@ Along with the other required arguments, **compare_enrichment_modifiers** has an
 
 # Usage examples
 Please refer to the notebooks dir in repo.
+
+# Citation
+1. Pounraja VK, Girirajan S. A general framework for identifying oligogenic combinations of rare variants in complex disorders. Genome Res. 2022 May;32(5):904-915. doi: 10.1101/gr.276348.121. Epub 2022 Mar 17. PMID: 35301265; PMCID: PMC9104696.
 
 # Possible modifications for v0.1.0
 1. Refining control frequencies step may not be required
