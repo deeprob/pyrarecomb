@@ -3,8 +3,8 @@ import pandas as pd
 from scipy.stats import binomtest
 from statsmodels.stats.multitest import multipletests
 
-from run_apriori_freqitems import run_apriori_freqitems
-import helpers as hp
+from .utils.run_apriori_freqitems import run_apriori_freqitems
+from .utils import helpers as hp
 
 
 def compare_enrichment_modifiers(

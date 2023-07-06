@@ -46,3 +46,12 @@ Please refer to the notebooks dir in repo.
 6. Create multiple testing function
 7. Rounding adjusted p-values to 3 digits not a good idea
 8. compare enrichment modifiers why are we checking for primary entities only as consequents?
+
+# Internal use
+## Package creation
+```bash
+$ python3 -m pip install --upgrade pip
+$ python3 -m pip install --upgrade build
+$ python3 -m pip install --upgrade twine
+$ python -m build
+$ python3 -m twine upload dist/*

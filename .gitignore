@@ -5,3 +5,5 @@
 **/data/
 Rrarecomb/
 test/
+dist/
+pyrarecomb.egg-info/
