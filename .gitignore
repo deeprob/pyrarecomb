@@ -1,0 +1,9 @@
+**/.ipynb_checkpoints
+**/archive
+.DS_Store
+**/__pycache__
+**/data/
+Rrarecomb/
+test/
+dist/
+pyrarecomb.egg-info/
