@@ -170,4 +170,3 @@ if __name__ == "__main__":
     compare_enrichment_modifiers(
         boolean_input_df, combo_length, min_indv_threshold, max_freq_threshold, primary_input_entities
         )
-

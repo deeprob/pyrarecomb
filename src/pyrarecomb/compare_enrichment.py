@@ -164,14 +164,7 @@ if __name__ == "__main__":
     combo_length = 2
     min_indv_threshold = 5
     max_freq_threshold = 0.25
-    # input_format = 'Input_'
-    # output_format = 'Output_'
-    # pval_filter_threshold = 0.05
-    # adj_pval_type = 'BH'
-    # min_power_threshold = 0.7
-    # sample_names_ind = 'Y'
 
     compare_enrichment(
         boolean_input_df, combo_length, min_indv_threshold, max_freq_threshold
         )
-
