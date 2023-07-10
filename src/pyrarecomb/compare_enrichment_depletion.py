@@ -11,7 +11,7 @@ from .utils import helpers as hp
 def compare_enrichment_depletion(
         boolean_input_df, combo_length, min_indv_threshold, max_freq_threshold, 
         input_format="Input_", output_format="Output_", pval_filter_threshold=0.05, 
-        adj_pval_type="BH", min_power_threshold=0.7, sample_names_ind="Y"
+        adj_pval_type="BH", min_power_threshold=0.7, sample_names_ind="Y", method="fpgrowth"
         ):
     ##########
     # Filter #
@@ -33,7 +33,7 @@ def compare_enrichment_depletion(
     ############################
     # Introduce a support threshold
     support_threshold = min_indv_threshold / apriori_input_cases_df.shape[0]
-    case_freqitems_df, case_freqitems_size1_df = run_apriori_freqitems(apriori_input_cases_df, combo_length, support_threshold)
+    case_freqitems_df, case_freqitems_size1_df = run_apriori_freqitems(apriori_input_cases_df, combo_length, support_threshold, method=method)
     # set the number of frequent items column name 
     case_freqitems_df = case_freqitems_df.rename(columns={"Obs_Count_Combo": "Case_Obs_Count_Combo"})
     # get the number of unique items forming combinations
@@ -62,7 +62,7 @@ def compare_enrichment_depletion(
     # define support threshold for controls
     support_threshold = 2 / number_of_controls
     # get the frequently mutated genes in controls using apriori
-    cont_freqitems_df, cont_freqitems_size1_df = run_apriori_freqitems(apriori_input_controls_df, combo_length, support_threshold)
+    cont_freqitems_df, cont_freqitems_size1_df = run_apriori_freqitems(apriori_input_controls_df, combo_length, support_threshold, method=method)
     # set the number of frequent items column name 
     cont_freqitems_df = cont_freqitems_df.rename(columns={"Obs_Count_Combo": "Cont_Obs_Count_Combo"})
     # Store the counts as a dictionary for each item

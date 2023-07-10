@@ -1,6 +1,6 @@
 from functools import reduce
 import pandas as pd
-from mlxtend.frequent_patterns import apriori, association_rules
+from mlxtend.frequent_patterns import apriori, fpgrowth, association_rules
 
 
 def get_freq_items_combo(frequent_itemsets, combo_length):
@@ -17,8 +17,9 @@ def get_freq_items_combo(frequent_itemsets, combo_length):
 def add_frozensets(a, b):
     return a.union(b)  
 
-def run_apriori_freqitems(apriori_input_df, combo_length, support_threshold, primary_entities=None):
-    frequent_itemsets = apriori(
+def run_apriori_freqitems(apriori_input_df, combo_length, support_threshold, primary_entities=None, method="fpgrowth"):
+    method_dict = {"apriori": apriori, "fpgrowth": fpgrowth}
+    frequent_itemsets = method_dict[method](
         apriori_input_df.astype(bool), min_support=support_threshold, 
         use_colnames=True, max_len=combo_length
         )

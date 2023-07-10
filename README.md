@@ -42,6 +42,7 @@ All these functions have the following **optional** arguments:
 - *adj_pval_type*: The adjusted p-value method to run for multiple testing, one of bonferroni/BH; default="BH"
 - *min_power_threshold*: The minimum power threhsold that the significant combinations must satisfy; default=0.7
 - *sample_names_ind*: Add samples who possess each combo, one of "Y"/"N"; default="Y"
+- *method*: The frequent itemset mining method, one of "fpgrowth"/"apriori"; default="fpgrowth"
 
 # Usage examples
 Please refer to the notebooks dir in repo.
