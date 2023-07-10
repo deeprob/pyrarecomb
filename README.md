@@ -34,21 +34,37 @@ Along with the other required arguments, **compare_enrichment_modifiers** has an
 
 - *primary_input_entities*: List of genes that must be part of the enriched combinations
 
+All these functions have the following optional arguments:
+
+- *input_format*: The prefix of the input columns in the boolean matrix; default="Input_"
+- *output_format*: The prefix of the output column in the boolean matrix; default="Output_"
+- *pval_filter_threshold*: The p-value significance threshold that the combinations must satisfy; default=0.05
+- *adj_pval_type*: The adjusted p-value method to run for multiple testing, one of bonferroni/BH; default="BH"
+- *min_power_threshold*: The minimum power threhsold that the significant combinations must satisfy; default=0.7
+- *sample_names_ind*: Add samples who possess each combo, one of "Y"/"N"; default="Y"
+
 # Usage examples
 Please refer to the notebooks dir in repo.
 
 # Citation
 1. Pounraja VK, Girirajan S. A general framework for identifying oligogenic combinations of rare variants in complex disorders. Genome Res. 2022 May;32(5):904-915. doi: 10.1101/gr.276348.121. Epub 2022 Mar 17. PMID: 35301265; PMCID: PMC9104696.
 
-# Possible modifications for v0.1.0
+# Modifications in v0.1.0
+## Major
+1. Options between apriori and fpgrowth algorithms for frequent itemsets mining
+
+## Minor
+1. After filter, raise ValueError check introduced if there is no data)
+2. Optional arguments bug fixed
+
+# Possible modifications for v0.2.0
 1. Refining control frequencies step may not be required
-2. After filter, introduce raise ValueError step if there is no data
-3. Create function for getting exp and obs prob for combos
-4. Create function for calculating p values
-5. Discuss the nominal significance filtration strategy
-6. Create multiple testing function
-7. Rounding adjusted p-values to 3 digits not a good idea
-8. compare enrichment modifiers why are we checking for primary entities only as consequents?
+2. Create function for getting exp and obs prob for combos
+3. Create function for calculating p values
+4. Discuss the nominal significance filtration strategy
+5. Create multiple testing function
+6. Rounding adjusted p-values to 3 digits not a good idea
+7. compare enrichment modifiers why are we checking for primary entities only as consequents?
 
 # Internal use
 ## Package creation

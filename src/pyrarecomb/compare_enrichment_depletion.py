@@ -9,8 +9,9 @@ from .utils import helpers as hp
 
 
 def compare_enrichment_depletion(
-        boolean_input_df, combo_length, input_format, output_format, min_indv_threshold, max_freq_threshold,
-        pval_filter_threshold, adj_pval_type, min_power_threshold, sample_names_ind
+        boolean_input_df, combo_length, min_indv_threshold, max_freq_threshold, 
+        input_format="Input_", output_format="Output_", pval_filter_threshold=0.05, 
+        adj_pval_type="BH", min_power_threshold=0.7, sample_names_ind="Y"
         ):
     ##########
     # Filter #
@@ -18,10 +19,14 @@ def compare_enrichment_depletion(
     apriori_input_cases_df, apriori_input_controls_df, sel_input_colname_list, output_column, number_of_cases = hp.preprocess_boolean(
         boolean_input_df, input_format, output_format, min_indv_threshold, max_freq_threshold
     )
+    num_cases, num_controls, num_genes = len(apriori_input_cases_df), len(apriori_input_controls_df), len(sel_input_colname_list)
     # debugging
-    print(f"Number of cases remaining after filtration: {len(apriori_input_cases_df)}")
-    print(f"Number of controls remaining after filtration: {len(apriori_input_controls_df)}")
-    print(f"Number of items remaining after filtration: {len(sel_input_colname_list)}")
+    print(f"Number of cases remaining after filtration: {num_cases}")
+    print(f"Number of controls remaining after filtration: {num_controls}")
+    print(f"Number of items remaining after filtration: {num_genes}")
+
+    if min(num_cases, num_controls, num_genes)==0:
+        raise ValueError("No samples/items detected: Relax your thresholds")
 
     ############################
     # CASES / SEVERE Phenotype #
@@ -153,15 +158,7 @@ if __name__ == "__main__":
     combo_length = 2
     min_indv_threshold = 5
     max_freq_threshold = 0.25
-    input_format = 'Input_'
-    output_format = 'Output_'
-    pval_filter_threshold = 0.05
-    adj_pval_type = 'BH'
-    min_power_threshold = 0.7
-    sample_names_ind = 'Y'
 
     compare_enrichment_depletion(
-        boolean_input_df, combo_length, input_format, output_format, min_indv_threshold, max_freq_threshold,
-        pval_filter_threshold, adj_pval_type, min_power_threshold, sample_names_ind
+        boolean_input_df, combo_length, min_indv_threshold, max_freq_threshold
         )
-

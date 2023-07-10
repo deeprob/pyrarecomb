@@ -8,8 +8,9 @@ from .utils import helpers as hp
 
 
 def compare_enrichment_modifiers(
-        boolean_input_df, combo_length, input_format, output_format, min_indv_threshold, max_freq_threshold,
-        primary_input_entities, pval_filter_threshold, adj_pval_type, min_power_threshold, sample_names_ind
+        boolean_input_df, combo_length, min_indv_threshold, max_freq_threshold, primary_input_entities,
+        input_format="Input_", output_format="Output_", pval_filter_threshold=0.05, 
+        adj_pval_type="BH", min_power_threshold=0.7, sample_names_ind="Y"
         ):
     ##########
     # Filter #
@@ -19,10 +20,15 @@ def compare_enrichment_modifiers(
     )
     input_colname_only_list = list(set(sel_input_colname_list).difference(set(primary_input_entities)))
     primary_input_list = list(set(sel_input_colname_list).intersection(set(primary_input_entities)))
+    num_cases, num_controls, num_genes = len(apriori_input_cases_df), len(apriori_input_controls_df), len(sel_input_colname_list)
     # debugging
-    print(f"Number of cases remaining after filtration: {len(apriori_input_cases_df)}")
-    print(f"Number of controls remaining after filtration: {len(apriori_input_controls_df)}")
-    print(f"Number of items remaining after filtration: {len(sel_input_colname_list)}")
+    print(f"Number of cases remaining after filtration: {num_cases}")
+    print(f"Number of controls remaining after filtration: {num_controls}")
+    print(f"Number of items remaining after filtration: {num_genes}")
+
+    if min(num_cases, num_controls, num_genes)==0:
+        raise ValueError("No samples/items detected: Relax your thresholds")
+    
     print(f"Number of secondary items remaining after filtration: {len(input_colname_only_list)}")
     print(f"Number of primary items remaining after filtration: {len(primary_input_list)}")
 
@@ -159,16 +165,9 @@ if __name__ == "__main__":
     combo_length = 2
     min_indv_threshold = 5
     max_freq_threshold = 0.25
-    input_format = 'Input_'
-    output_format = 'Output_'
-    pval_filter_threshold = 0.05
-    adj_pval_type = 'BH'
-    min_power_threshold = 0.7
-    sample_names_ind = 'Y'
     primary_input_entities= primary_inputs
 
     compare_enrichment_modifiers(
-        boolean_input_df, combo_length, input_format, output_format, min_indv_threshold, max_freq_threshold,
-        primary_input_entities, pval_filter_threshold, adj_pval_type, min_power_threshold, sample_names_ind
+        boolean_input_df, combo_length, min_indv_threshold, max_freq_threshold, primary_input_entities
         )
 
