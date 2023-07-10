@@ -15,7 +15,7 @@ The pythonic version of RareComb currently has 3 user facing functions:
 
 3. **compare_enrichment_modifiers**: Checks for oligogenic combinations of rare genetic variants that are enriched in cases but not in controls where one of the items in a combination must be within an user-defined set of genes.
 
-All these functions have the following required arguments:
+All these functions have the following **required** arguments:
 
 - *boolean_input_df*: A dataframe where rows are the number of samples and columns include sample ids (represented by the column name: "*Sample_Name*") along with one hot encoded information about the sample genotype (presence or absence rare deleterious mutation within a gene; these columns should start with the prefix "*Input_*") and phenotype (presence or absence of a phenotype; this column should start with the prefix "*Output_*"). Example dataframe is as follows:
 
@@ -34,7 +34,7 @@ Along with the other required arguments, **compare_enrichment_modifiers** has an
 
 - *primary_input_entities*: List of genes that must be part of the enriched combinations
 
-All these functions have the following optional arguments:
+All these functions have the following **optional** arguments:
 
 - *input_format*: The prefix of the input columns in the boolean matrix; default="Input_"
 - *output_format*: The prefix of the output column in the boolean matrix; default="Output_"
