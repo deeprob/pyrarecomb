@@ -9,8 +9,9 @@ from .utils import helpers as hp
 
 
 def compare_enrichment_depletion(
-        boolean_input_df, combo_length, input_format, output_format, min_indv_threshold, max_freq_threshold,
-        pval_filter_threshold, adj_pval_type, min_power_threshold, sample_names_ind
+        boolean_input_df, combo_length, min_indv_threshold, max_freq_threshold, 
+        input_format="Input_", output_format="Output_", pval_filter_threshold=0.05, 
+        adj_pval_type="BH", min_power_threshold=0.7, sample_names_ind="Y", method="fpgrowth"
         ):
     ##########
     # Filter #
@@ -18,17 +19,21 @@ def compare_enrichment_depletion(
     apriori_input_cases_df, apriori_input_controls_df, sel_input_colname_list, output_column, number_of_cases = hp.preprocess_boolean(
         boolean_input_df, input_format, output_format, min_indv_threshold, max_freq_threshold
     )
+    num_cases, num_controls, num_genes = len(apriori_input_cases_df), len(apriori_input_controls_df), len(sel_input_colname_list)
     # debugging
-    print(f"Number of cases remaining after filtration: {len(apriori_input_cases_df)}")
-    print(f"Number of controls remaining after filtration: {len(apriori_input_controls_df)}")
-    print(f"Number of items remaining after filtration: {len(sel_input_colname_list)}")
+    print(f"Number of cases remaining after filtration: {num_cases}")
+    print(f"Number of controls remaining after filtration: {num_controls}")
+    print(f"Number of items remaining after filtration: {num_genes}")
+
+    if min(num_cases, num_controls, num_genes)==0:
+        raise ValueError("No samples/items detected: Relax your thresholds")
 
     ############################
     # CASES / SEVERE Phenotype #
     ############################
     # Introduce a support threshold
     support_threshold = min_indv_threshold / apriori_input_cases_df.shape[0]
-    case_freqitems_df, case_freqitems_size1_df = run_apriori_freqitems(apriori_input_cases_df, combo_length, support_threshold)
+    case_freqitems_df, case_freqitems_size1_df = run_apriori_freqitems(apriori_input_cases_df, combo_length, support_threshold, method=method)
     # set the number of frequent items column name 
     case_freqitems_df = case_freqitems_df.rename(columns={"Obs_Count_Combo": "Case_Obs_Count_Combo"})
     # get the number of unique items forming combinations
@@ -57,7 +62,7 @@ def compare_enrichment_depletion(
     # define support threshold for controls
     support_threshold = 2 / number_of_controls
     # get the frequently mutated genes in controls using apriori
-    cont_freqitems_df, cont_freqitems_size1_df = run_apriori_freqitems(apriori_input_controls_df, combo_length, support_threshold)
+    cont_freqitems_df, cont_freqitems_size1_df = run_apriori_freqitems(apriori_input_controls_df, combo_length, support_threshold, method=method)
     # set the number of frequent items column name 
     cont_freqitems_df = cont_freqitems_df.rename(columns={"Obs_Count_Combo": "Cont_Obs_Count_Combo"})
     # Store the counts as a dictionary for each item
@@ -153,15 +158,7 @@ if __name__ == "__main__":
     combo_length = 2
     min_indv_threshold = 5
     max_freq_threshold = 0.25
-    input_format = 'Input_'
-    output_format = 'Output_'
-    pval_filter_threshold = 0.05
-    adj_pval_type = 'BH'
-    min_power_threshold = 0.7
-    sample_names_ind = 'Y'
 
     compare_enrichment_depletion(
-        boolean_input_df, combo_length, input_format, output_format, min_indv_threshold, max_freq_threshold,
-        pval_filter_threshold, adj_pval_type, min_power_threshold, sample_names_ind
+        boolean_input_df, combo_length, min_indv_threshold, max_freq_threshold
         )
-
