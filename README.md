@@ -74,4 +74,4 @@ $ python3 -m pip install --upgrade pip
 $ python3 -m pip install --upgrade build
 $ python3 -m pip install --upgrade twine
 $ python -m build
-$ python3 -m twine upload dist/*
+$ python3 -m twine upload --skip-existing dist/*
