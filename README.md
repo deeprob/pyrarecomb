@@ -50,6 +50,12 @@ Please refer to the notebooks dir in repo.
 # Citation
 1. Pounraja VK, Girirajan S. A general framework for identifying oligogenic combinations of rare variants in complex disorders. Genome Res. 2022 May;32(5):904-915. doi: 10.1101/gr.276348.121. Epub 2022 Mar 17. PMID: 35301265; PMCID: PMC9104696.
 
+# Modifications in v0.1.1
+## Major
+1. Better logging using a log file
+2. Method verbose during tree generation
+3. Pandas applymap changed to map due to deprecation warning
+
 # Modifications in v0.1.0
 ## Major
 1. Options between apriori and fpgrowth algorithms for frequent itemsets mining

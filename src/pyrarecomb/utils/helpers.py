@@ -4,6 +4,7 @@ from collections import Counter
 from scipy.stats import binomtest
 from statsmodels.stats.power import tt_ind_solve_power
 from statsmodels.stats.proportion import proportion_effectsize
+import logging
 
 
 def preprocess_boolean(boolean_input_df, input_format, output_format, min_indv_threshold, max_freq_threshold):
@@ -17,8 +18,8 @@ def preprocess_boolean(boolean_input_df, input_format, output_format, min_indv_t
     input_colname_list = [col for col in boolean_input_df.columns if col.startswith(input_format)]
     output_column = [col for col in boolean_input_df.columns if col.startswith(output_format)][0]
     # Make cases and controls apriori input df
-    apriori_input_cases_df = boolean_input_df.loc[boolean_input_df[output_column]==1, input_colname_list].applymap(int)
-    apriori_input_controls_df = boolean_input_df.loc[boolean_input_df[output_column]==0, input_colname_list].applymap(int)
+    apriori_input_cases_df = boolean_input_df.loc[boolean_input_df[output_column]==1, input_colname_list].map(int)
+    apriori_input_controls_df = boolean_input_df.loc[boolean_input_df[output_column]==0, input_colname_list].map(int)
     # Get the number of cases from input param - max freq thresh
     number_of_cases = apriori_input_cases_df.shape[0]
     max_instances = round(number_of_cases * max_freq_threshold)
@@ -42,7 +43,7 @@ def refine_control_frequencies(all_sig_case_cont_freqitems_df, apriori_input_con
     # Check if zero frequency cases exist in controls
     cont_combos_w_zero_freq_df = all_sig_case_cont_freqitems_df.loc[all_sig_case_cont_freqitems_df["Cont_Obs_Count_Combo"] == 0]
     zero_freq_combo_count = cont_combos_w_zero_freq_df.shape[0]
-    print('Number of combinations with support less than 2 in controls:', zero_freq_combo_count)
+    logging.info(f'Number of combinations with support less than 2 in controls: {zero_freq_combo_count}')
     if zero_freq_combo_count > 0:
         # REFINE CONTROL FREQUENCIES
         # for the zero frequency combos in controls, get their actual combo size

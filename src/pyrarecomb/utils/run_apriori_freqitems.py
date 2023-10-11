@@ -21,7 +21,7 @@ def run_apriori_freqitems(apriori_input_df, combo_length, support_threshold, pri
     method_dict = {"apriori": apriori, "fpgrowth": fpgrowth}
     frequent_itemsets = method_dict[method](
         apriori_input_df.astype(bool), min_support=support_threshold, 
-        use_colnames=True, max_len=combo_length
+        use_colnames=True, max_len=combo_length, verbose=5
         )
     if primary_entities is not None:
         # run association rules
