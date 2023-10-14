@@ -50,11 +50,6 @@ Please refer to the notebooks dir in repo.
 # Citation
 1. Pounraja VK, Girirajan S. A general framework for identifying oligogenic combinations of rare variants in complex disorders. Genome Res. 2022 May;32(5):904-915. doi: 10.1101/gr.276348.121. Epub 2022 Mar 17. PMID: 35301265; PMCID: PMC9104696.
 
-# Modifications in v0.1.1
-## Major
-1. Better logging using a log file
-2. Method verbose during tree generation
-3. Pandas applymap changed to map due to deprecation warning
 
 # Modifications in v0.1.0
 ## Major
@@ -63,6 +58,10 @@ Please refer to the notebooks dir in repo.
 ## Minor
 1. After filter, raise ValueError check introduced if there is no data)
 2. Optional arguments bug fixed
+3. Better logging using a log file
+4. Method verbose during tree generation
+5. Pandas applymap changed to map due to deprecation warning
+6. Get counts helper function with pandas query fixed for hyphenated gene names
 
 # Possible modifications for v0.2.0
 1. Refining control frequencies step may not be required

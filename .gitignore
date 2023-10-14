@@ -8,3 +8,4 @@ test/
 dist/
 pyrarecomb.egg-info/
 scratch.ipynb
+*.log

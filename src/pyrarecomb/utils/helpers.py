@@ -36,7 +36,7 @@ def get_counts(uniq_items, input_df):
     """
     This function gets the counts of combos from an input boolean df
     """
-    query = " & ".join([f"({i} == 1)" for i in uniq_items.split("|")])
+    query = " & ".join([f"(`{i}` == 1)" for i in uniq_items.split("|")])
     return len(input_df.query(query))
 
 def refine_control_frequencies(all_sig_case_cont_freqitems_df, apriori_input_controls_df,number_of_controls,check_enrichment=True):
