@@ -77,6 +77,8 @@ def compare_enrichment_modifiers(
     # Get the observed count in controls for each item
     for i in range(1, combo_length+1):
         case_cont_freqitems_df[f"Cont_Obs_Count_I{i}"] = case_cont_freqitems_df[f"Item_{i}"].map(cont_freqitems_countdict)
+    # Refine control frequencies for combinations with support less than 2
+    case_cont_freqitems_df = hp.refine_control_frequencies(case_cont_freqitems_df, apriori_input_controls_df)
     # Get the expected probability of observing the combos in controls
     case_cont_freqitems_df["Cont_Exp_Prob_Combo"] = case_cont_freqitems_df.loc[:, [f"Cont_Obs_Count_I{i}" for i in range(1, combo_length+1)]].prod(axis=1)/(number_of_controls**combo_length)
     # Get the observed probability of observing the combos
@@ -92,6 +94,7 @@ def compare_enrichment_modifiers(
     ########################
     # TODO: This step is not omitted from compare_enrichment_depletion since we
     # TODO: consider all for multiple testing.
+    # TODO: Need to make sure this step is correct here
     sel_case_cont_freqitems_df = case_cont_freqitems_df
     # debugging
     print(f"Number of combinations considered for multiple testing correction: {sel_case_cont_freqitems_df.shape[0]}")
@@ -126,8 +129,6 @@ def compare_enrichment_modifiers(
     ###################
     # Check if there is at least a single significant combination after multiple testing correction
     if multtest_sig_comb_count > 0:
-        # TODO: Refining control frequencies may not be required if support is changed to 1/num_controls for combos
-        all_sig_case_cont_freqitems_df = hp.refine_control_frequencies(all_sig_case_cont_freqitems_df, apriori_input_controls_df,number_of_controls)
 
         ######################
         # POWER CALCULATIONS #

@@ -79,6 +79,8 @@ def compare_enrichment(
     # Get the observed count in controls for each item
     for i in range(1, combo_length+1):
         case_cont_freqitems_df[f"Cont_Obs_Count_I{i}"] = case_cont_freqitems_df[f"Item_{i}"].map(cont_freqitems_countdict)
+    # Refine control frequencies for combinations with support less than 2
+    case_cont_freqitems_df = hp.refine_control_frequencies(case_cont_freqitems_df, apriori_input_controls_df)
     # Get the expected probability of observing the combos in controls
     case_cont_freqitems_df["Cont_Exp_Prob_Combo"] = case_cont_freqitems_df.loc[:, [f"Cont_Obs_Count_I{i}" for i in range(1, combo_length+1)]].prod(axis=1)/(number_of_controls**combo_length)
     # Get the observed probability of observing the combos
@@ -110,8 +112,8 @@ def compare_enrichment(
     # Create variable for number of tests done
     number_of_tests = sel_case_cont_freqitems_df.shape[0]
     # multiple test BH and Bonferroni - round to 3 places of decimal will change in later versions
-    sel_case_cont_freqitems_df['Case_Adj_Pval_bonf'] = np.round(multipletests(sel_case_cont_freqitems_df['Case_pvalue_more'].values, method='bonferroni')[1], 3)
-    sel_case_cont_freqitems_df['Case_Adj_Pval_BH'] = np.round(multipletests(sel_case_cont_freqitems_df['Case_pvalue_more'].values, method='fdr_bh')[1], 3)
+    sel_case_cont_freqitems_df['Case_Adj_Pval_bonf'] = multipletests(sel_case_cont_freqitems_df['Case_pvalue_more'].values, method='bonferroni')[1]
+    sel_case_cont_freqitems_df['Case_Adj_Pval_BH'] = multipletests(sel_case_cont_freqitems_df['Case_pvalue_more'].values, method='fdr_bh')[1]
     # add a column for number of tests done
     sel_case_cont_freqitems_df['Num_tests'] = number_of_tests
     # filter significant items
@@ -134,8 +136,6 @@ def compare_enrichment(
     ###################
     # Check if there is at least a single significant combination after multiple testing correction
     if multtest_sig_comb_count > 0:
-        # TODO: Refining control frequencies may not be required if support is changed to 1/num_controls for combos
-        all_sig_case_cont_freqitems_df = hp.refine_control_frequencies(all_sig_case_cont_freqitems_df, apriori_input_controls_df,number_of_controls)
 
         ######################
         # POWER CALCULATIONS #
@@ -169,9 +169,9 @@ if __name__ == "__main__":
     # load the input df
     boolean_input_df = pd.read_csv("/data6/deepro/computational_pipelines/pyrarecomb/test/input/test_input.csv")
     logdir = "/data6/deepro/computational_pipelines/pyrarecomb/test/logs"
-    savefile = "/data6/deepro/computational_pipelines/pyrarecomb/test/output/test_output_combo3.csv"
+    savefile = "/data6/deepro/computational_pipelines/pyrarecomb/test/output/test_output_combo2.csv"
     # define all other params
-    combo_length = 3
+    combo_length = 2
     min_indv_threshold = 5
     max_freq_threshold = 0.25
 

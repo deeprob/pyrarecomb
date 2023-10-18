@@ -39,34 +39,28 @@ def get_counts(uniq_items, input_df):
     query = " & ".join([f"(`{i}` == 1)" for i in uniq_items.split("|")])
     return len(input_df.query(query))
 
-def refine_control_frequencies(all_sig_case_cont_freqitems_df, apriori_input_controls_df,number_of_controls,check_enrichment=True):
+def refine_control_frequencies(case_cont_freqitems_df, apriori_input_controls_df):
     # Check if zero frequency cases exist in controls
-    cont_combos_w_zero_freq_df = all_sig_case_cont_freqitems_df.loc[all_sig_case_cont_freqitems_df["Cont_Obs_Count_Combo"] == 0]
+    cont_combos_w_zero_freq_df = case_cont_freqitems_df.loc[case_cont_freqitems_df["Cont_Obs_Count_Combo"] == 0]
     zero_freq_combo_count = cont_combos_w_zero_freq_df.shape[0]
     logging.info(f'Number of combinations with support less than 2 in controls: {zero_freq_combo_count}')
     if zero_freq_combo_count > 0:
         # REFINE CONTROL FREQUENCIES
         # for the zero frequency combos in controls, get their actual combo size
         cont_combos_w_zero_freq_df["Cont_Obs_Count_Combo"] = cont_combos_w_zero_freq_df.uniq_items.apply(get_counts, args=(apriori_input_controls_df, ))
-        cont_combos_w_zero_freq_df["Cont_Obs_Prob_Combo"] = cont_combos_w_zero_freq_df['Cont_Obs_Count_Combo'] / number_of_controls
-        if check_enrichment:
-            cont_combos_w_zero_freq_df['Cont_pvalue_more'] = cont_combos_w_zero_freq_df.apply(lambda row: binomtest(int(row['Cont_Obs_Count_Combo']), number_of_controls, row['Cont_Exp_Prob_Combo'], alternative='greater').pvalue, axis=1)
-        else:
-            # check for depletion
-            cont_combos_w_zero_freq_df['Cont_pvalue_less'] = cont_combos_w_zero_freq_df.apply(lambda row: binomtest(int(row['Cont_Obs_Count_Combo']), number_of_controls, row['Cont_Exp_Prob_Combo'], alternative='less').pvalue, axis=1)
         # rewrite the items in the main df
-        all_sig_case_cont_freqitems_df.update(cont_combos_w_zero_freq_df)
-    return all_sig_case_cont_freqitems_df
+        case_cont_freqitems_df.update(cont_combos_w_zero_freq_df)
+    return case_cont_freqitems_df
 
 def calculate_power(all_sig_case_cont_freqitems_df, number_of_cases, number_of_controls):
-    all_sig_case_cont_freqitems_df['Case_Exp_Count_Combo'] = round((all_sig_case_cont_freqitems_df['Case_Exp_Prob_Combo'] * number_of_cases), 2)
-    all_sig_case_cont_freqitems_df['Cont_Exp_Count_Combo'] = round((all_sig_case_cont_freqitems_df['Cont_Exp_Prob_Combo'] * number_of_controls), 2)
+    all_sig_case_cont_freqitems_df['Case_Exp_Count_Combo'] = all_sig_case_cont_freqitems_df['Case_Exp_Prob_Combo'] * number_of_cases
+    all_sig_case_cont_freqitems_df['Cont_Exp_Count_Combo'] = all_sig_case_cont_freqitems_df['Cont_Exp_Prob_Combo'] * number_of_controls
     all_sig_case_cont_freqitems_df['Effect_Size'] = all_sig_case_cont_freqitems_df.apply(
         lambda row: proportion_effectsize(row['Case_Obs_Prob_Combo'], row['Cont_Obs_Prob_Combo']), axis=1)
-    all_sig_case_cont_freqitems_df['Power_One_Pct'] = round(all_sig_case_cont_freqitems_df.apply(
-        lambda row: tt_ind_solve_power(effect_size=row['Effect_Size'], nobs1=number_of_cases, ratio=number_of_controls/number_of_cases, alpha=0.01), axis=1), 3)
-    all_sig_case_cont_freqitems_df['Power_Five_Pct'] = round(all_sig_case_cont_freqitems_df.apply(
-        lambda row: tt_ind_solve_power(effect_size=row['Effect_Size'], nobs1=number_of_cases, ratio=number_of_controls/number_of_cases, alpha=0.05),axis=1), 3)
+    all_sig_case_cont_freqitems_df['Power_One_Pct'] = all_sig_case_cont_freqitems_df.apply(
+        lambda row: tt_ind_solve_power(effect_size=row['Effect_Size'], nobs1=number_of_cases, ratio=number_of_controls/number_of_cases, alpha=0.01), axis=1)
+    all_sig_case_cont_freqitems_df['Power_Five_Pct'] = all_sig_case_cont_freqitems_df.apply(
+        lambda row: tt_ind_solve_power(effect_size=row['Effect_Size'], nobs1=number_of_cases, ratio=number_of_controls/number_of_cases, alpha=0.05),axis=1)
     return all_sig_case_cont_freqitems_df
 
 def get_samples(row, samples_df, output_column):

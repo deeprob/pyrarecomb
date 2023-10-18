@@ -72,6 +72,8 @@ def compare_enrichment_depletion(
     # Get the observed count in controls for each item
     for i in range(1, combo_length+1):
         case_cont_freqitems_df[f"Cont_Obs_Count_I{i}"] = case_cont_freqitems_df[f"Item_{i}"].map(cont_freqitems_countdict)
+    # Refine control frequencies for combinations with support less than 2
+    case_cont_freqitems_df = hp.refine_control_frequencies(case_cont_freqitems_df, apriori_input_controls_df)    
     # Get the expected probability of observing the combos in controls
     case_cont_freqitems_df["Cont_Exp_Prob_Combo"] = case_cont_freqitems_df.loc[:, [f"Cont_Obs_Count_I{i}" for i in range(1, combo_length+1)]].prod(axis=1)/(number_of_controls**combo_length)
     # Get the observed probability of observing the combos
@@ -85,8 +87,8 @@ def compare_enrichment_depletion(
     ########################
     # Nominal significance #
     ########################
-    # TODO: This step is not omitted from compare_enrichment_depletion since we
-    # TODO: consider all for multiple testing.
+    # This step is omitted from compare_enrichment_depletion since we
+    # consider all for multiple testing.
     sel_case_cont_freqitems_df = case_cont_freqitems_df
     # debugging
     print(f"Number of combinations considered for multiple testing correction: {sel_case_cont_freqitems_df.shape[0]}")
@@ -97,8 +99,8 @@ def compare_enrichment_depletion(
     # Create variable for number of tests done
     number_of_tests = sel_case_cont_freqitems_df.shape[0]
     # multiple test BH and Bonferroni - round to 3 places of decimal will change in later versions
-    sel_case_cont_freqitems_df['Case_Adj_Pval_bonf'] = np.round(multipletests(sel_case_cont_freqitems_df['Case_pvalue_more'].values, method='bonferroni')[1], 3)
-    sel_case_cont_freqitems_df['Case_Adj_Pval_BH'] = np.round(multipletests(sel_case_cont_freqitems_df['Case_pvalue_more'].values, method='fdr_bh')[1], 3)
+    sel_case_cont_freqitems_df['Case_Adj_Pval_bonf'] = multipletests(sel_case_cont_freqitems_df['Case_pvalue_more'].values, method='bonferroni')[1]
+    sel_case_cont_freqitems_df['Case_Adj_Pval_BH'] = multipletests(sel_case_cont_freqitems_df['Case_pvalue_more'].values, method='fdr_bh')[1]
     # add a column for number of tests done
     sel_case_cont_freqitems_df['Num_tests'] = number_of_tests
     # filter significant items
@@ -121,7 +123,6 @@ def compare_enrichment_depletion(
     ###################
     # Check if there is at least a single significant combination after multiple testing correction
     if multtest_sig_comb_count > 0:
-        all_sig_case_cont_freqitems_df = hp.refine_control_frequencies(all_sig_case_cont_freqitems_df, apriori_input_controls_df,number_of_controls,check_enrichment=False)
 
         ######################
         # POWER CALCULATIONS #

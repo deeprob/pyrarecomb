@@ -54,6 +54,7 @@ Please refer to the notebooks dir in repo.
 # Modifications in v0.1.0
 ## Major
 1. Options between apriori and fpgrowth algorithms for frequent itemsets mining
+2. Refining control frequency step correctly added before running multiple testing
 
 ## Minor
 1. After filter, raise ValueError check introduced if there is no data)
@@ -62,6 +63,7 @@ Please refer to the notebooks dir in repo.
 4. Method verbose during tree generation
 5. Pandas applymap changed to map due to deprecation warning
 6. Get counts helper function with pandas query fixed for hyphenated gene names
+7. No longer rounding off statistical values to 3 places of decimal
 
 # Possible modifications for v0.2.0
 1. Refining control frequencies step may not be required
