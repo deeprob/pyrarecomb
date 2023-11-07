@@ -17,26 +17,16 @@ def get_freq_items_combo(frequent_itemsets, combo_length):
 def add_frozensets(a, b):
     return a.union(b)  
 
-def run_apriori_freqitems(apriori_input_df, combo_length, support_threshold, primary_entities=None, method="fpgrowth"):
+def run_apriori_freqitems(apriori_input_df, combo_length, support_threshold, primary_entities=None, secondary_entities=None, method="fpgrowth"):
     method_dict = {"apriori": apriori, "fpgrowth": fpgrowth}
     frequent_itemsets = method_dict[method](
         apriori_input_df.astype(bool), min_support=support_threshold, 
         use_colnames=True, max_len=combo_length, verbose=1
         )
     if primary_entities is not None:
-        # run association rules
-        assoc_df = association_rules(frequent_itemsets, metric="confidence", min_threshold=0.0)
-        # the primary entities must be in the consequents only
-        assoc_df = assoc_df.loc[
-            (assoc_df.consequents.apply(lambda x: True if len(x.intersection(primary_entities))>0 else False)) &
-            (assoc_df.antecedents.apply(lambda x: True if len(x.intersection(primary_entities))==0 else False))
-            ]
-        # convert assoc df to frequent items
-        assoc_df["itemsets"] = assoc_df.apply(lambda row: row["antecedents"].union(row["consequents"]), axis=1)
-        # get the individual items from frequent items
-        frequent_itemsets = frequent_itemsets.loc[frequent_itemsets.itemsets.apply(lambda x: len(x)==1)]
-        # add the filtered items obtained from association mining
-        frequent_itemsets = pd.concat((frequent_itemsets, assoc_df.loc[:, ["itemsets", "support"]]))
+        # keep combination which have both primary and secondary entities as well as all items of length 1
+        frequent_itemsets = frequent_itemsets.loc[frequent_itemsets.itemsets.apply(lambda x: True if ((len(x.intersection(primary_entities))>0) or (len(x)==1)) else False)]
+        frequent_itemsets = frequent_itemsets.loc[frequent_itemsets.itemsets.apply(lambda x: True if ((len(x.intersection(secondary_entities))>0) or (len(x)==1)) else False)]
 
     frequent_itemsets['count'] = frequent_itemsets['support'] * len(apriori_input_df)
     frequent_itemsets['Obs_Count_Combo'] = frequent_itemsets.pop('count')

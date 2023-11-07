@@ -1,7 +1,8 @@
-import numpy as np
 import pandas as pd
 from scipy.stats import binomtest
 from statsmodels.stats.multitest import multipletests
+import logging
+import os
 
 from .utils.run_apriori_freqitems import run_apriori_freqitems
 from .utils import helpers as hp
@@ -10,11 +11,17 @@ from .utils import helpers as hp
 def compare_enrichment_modifiers(
         boolean_input_df, combo_length, min_indv_threshold, max_freq_threshold, primary_input_entities,
         input_format="Input_", output_format="Output_", pval_filter_threshold=0.05, 
-        adj_pval_type="BH", min_power_threshold=0.7, sample_names_ind="Y", method="fpgrowth"
+        adj_pval_type="BH", min_power_threshold=0.7, sample_names_ind="Y", method="fpgrowth", logdir=""
         ):
     ##########
     # Filter #
     ##########
+    if not logdir:
+        logdir = os.getcwd()
+    logfile = os.path.join(logdir, "rarecomb.log")
+    logging.basicConfig(filename=logfile, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.INFO, filemode="w")
+    logging.info("Starting RareComb analysis ...")
+
     apriori_input_cases_df, apriori_input_controls_df, sel_input_colname_list, output_column, number_of_cases = hp.preprocess_boolean(
         boolean_input_df, input_format, output_format, min_indv_threshold, max_freq_threshold
     )
@@ -22,22 +29,22 @@ def compare_enrichment_modifiers(
     primary_input_list = list(set(sel_input_colname_list).intersection(set(primary_input_entities)))
     num_cases, num_controls, num_genes = len(apriori_input_cases_df), len(apriori_input_controls_df), len(sel_input_colname_list)
     # debugging
-    print(f"Number of cases remaining after filtration: {num_cases}")
-    print(f"Number of controls remaining after filtration: {num_controls}")
-    print(f"Number of items remaining after filtration: {num_genes}")
+    logging.info(f"Number of cases remaining after filtration: {num_cases}")
+    logging.info(f"Number of controls remaining after filtration: {num_controls}")
+    logging.info(f"Number of items remaining after filtration: {num_genes}")
 
     if min(num_cases, num_controls, num_genes)==0:
         raise ValueError("No samples/items detected: Relax your thresholds")
     
-    print(f"Number of secondary items remaining after filtration: {len(input_colname_only_list)}")
-    print(f"Number of primary items remaining after filtration: {len(primary_input_list)}")
+    logging.info(f"Number of secondary items remaining after filtration: {len(input_colname_only_list)}")
+    logging.info(f"Number of primary items remaining after filtration: {len(primary_input_list)}")
 
     ############################
     # CASES / SEVERE Phenotype #
     ############################
     # Introduce a support threshold
     support_threshold = min_indv_threshold / apriori_input_cases_df.shape[0]
-    case_freqitems_df, case_freqitems_size1_df = run_apriori_freqitems(apriori_input_cases_df, combo_length, support_threshold, primary_entities=primary_input_list, method=method)
+    case_freqitems_df, case_freqitems_size1_df = run_apriori_freqitems(apriori_input_cases_df, combo_length, support_threshold, primary_entities=primary_input_list, secondary_entities=input_colname_only_list, method=method)
     # set the number of frequent items column name 
     case_freqitems_df = case_freqitems_df.rename(columns={"Obs_Count_Combo": "Case_Obs_Count_Combo"})
     # get the number of unique items forming combinations
@@ -54,8 +61,8 @@ def compare_enrichment_modifiers(
     # Using bionomial test, calculate p-value
     case_freqitems_df['Case_pvalue_more'] = case_freqitems_df.apply(lambda row: binomtest(int(row['Case_Obs_Count_Combo']), number_of_cases, row['Case_Exp_Prob_Combo'], alternative='greater').pvalue, axis=1)
     # debugging
-    print(f'Number of initial combinations identified for cases: {case_freqitems_df.shape[0]}')
-    print(f'Number of unique items in cases: {len(uniq_combo_items)}')
+    logging.info(f'Number of initial combinations identified for cases: {case_freqitems_df.shape[0]}')
+    logging.info(f'Number of unique items in cases: {len(uniq_combo_items)}')
 
     #############################
     # CONTROLS / MILD Phenotype #
@@ -67,7 +74,8 @@ def compare_enrichment_modifiers(
     support_threshold = 2 / number_of_controls
     # get the frequently mutated genes in controls using apriori
     sel_primary_input_list = uniq_combo_items.intersection(primary_input_list)
-    cont_freqitems_df, cont_freqitems_size1_df = run_apriori_freqitems(apriori_input_controls_df, combo_length, support_threshold, primary_entities=sel_primary_input_list, method=method)
+    sel_secondary_input_list = uniq_combo_items.intersection(input_colname_only_list)
+    cont_freqitems_df, cont_freqitems_size1_df = run_apriori_freqitems(apriori_input_controls_df, combo_length, support_threshold, primary_entities=sel_primary_input_list, secondary_entities=sel_secondary_input_list, method=method)
     # set the number of frequent items column name 
     cont_freqitems_df = cont_freqitems_df.rename(columns={"Obs_Count_Combo": "Cont_Obs_Count_Combo"})
     # Store the counts as a dictionary for each item
@@ -86,18 +94,23 @@ def compare_enrichment_modifiers(
     # Using bionomial test, calculate p-value
     case_cont_freqitems_df['Cont_pvalue_more'] = case_cont_freqitems_df.apply(lambda row: binomtest(int(row['Cont_Obs_Count_Combo']), number_of_controls, row['Cont_Exp_Prob_Combo'], alternative='greater').pvalue, axis=1)
     # debugging
-    print(f"Number of controls: {number_of_controls}")
-    print(f"Number of combinations with support of at least 2 in controls: {cont_freqitems_df.shape[0]}")
+    logging.info(f"Number of controls: {number_of_controls}")
+    logging.info(f"Number of combinations with support of at least 2 in controls: {cont_freqitems_df.shape[0]}")
 
     ########################
     # Nominal significance #
     ########################
-    # TODO: This step is not omitted from compare_enrichment_depletion since we
-    # TODO: consider all for multiple testing.
-    # TODO: Need to make sure this step is correct here
-    sel_case_cont_freqitems_df = case_cont_freqitems_df
+    # get cases where case pvalue and control pvalue are both significant
+    filt_case_cont_freqitems_df = case_cont_freqitems_df.loc[(case_cont_freqitems_df['Case_pvalue_more'] < pval_filter_threshold) &
+                                                            (case_cont_freqitems_df['Cont_pvalue_more'] < pval_filter_threshold)
+                                                            ]
+    # get cases where either case pvalue or control pvalue are not significant                   
+    sel_case_cont_freqitems_df = case_cont_freqitems_df.loc[~((case_cont_freqitems_df['Case_pvalue_more'] < pval_filter_threshold) &
+                                                            (case_cont_freqitems_df['Cont_pvalue_more'] < pval_filter_threshold))
+                                                            ]
     # debugging
-    print(f"Number of combinations considered for multiple testing correction: {sel_case_cont_freqitems_df.shape[0]}")
+    logging.info(f"Number of combinations that are enriched in both cases and controls: {filt_case_cont_freqitems_df.shape[0]}")
+    logging.info(f"Number of combinations considered for multiple testing correction: {sel_case_cont_freqitems_df.shape[0]}")
 
     ####################
     # Multiple testing #
@@ -105,8 +118,8 @@ def compare_enrichment_modifiers(
     # Create variable for number of tests done
     number_of_tests = sel_case_cont_freqitems_df.shape[0]
     # multiple test BH and Bonferroni - round to 3 places of decimal will change in later versions
-    sel_case_cont_freqitems_df['Case_Adj_Pval_bonf'] = np.round(multipletests(sel_case_cont_freqitems_df['Case_pvalue_more'].values, method='bonferroni')[1], 3)
-    sel_case_cont_freqitems_df['Case_Adj_Pval_BH'] = np.round(multipletests(sel_case_cont_freqitems_df['Case_pvalue_more'].values, method='fdr_bh')[1], 3)
+    sel_case_cont_freqitems_df['Case_Adj_Pval_bonf'] = multipletests(sel_case_cont_freqitems_df['Case_pvalue_more'].values, method='bonferroni')[1]
+    sel_case_cont_freqitems_df['Case_Adj_Pval_BH'] = multipletests(sel_case_cont_freqitems_df['Case_pvalue_more'].values, method='fdr_bh')[1]
     # add a column for number of tests done
     sel_case_cont_freqitems_df['Num_tests'] = number_of_tests
     # filter significant items
@@ -120,9 +133,12 @@ def compare_enrichment_modifiers(
             (sel_case_cont_freqitems_df['Case_Adj_Pval_bonf'] < pval_filter_threshold) &
             (sel_case_cont_freqitems_df['Cont_pvalue_more'] > pval_filter_threshold)
         ]
+    else:
+        raise ValueError("Invalid multiple testing option selected")
+
     multtest_sig_comb_count = all_sig_case_cont_freqitems_df.shape[0]
     # debugging
-    print(f"Number of combinations that are significant after multiple testing correction: {multtest_sig_comb_count}")
+    logging.info(f"Number of combinations that are significant after multiple testing correction: {multtest_sig_comb_count}")
 
     ###################
     # Post processing #
@@ -140,19 +156,19 @@ def compare_enrichment_modifiers(
         # SAMPLES DETECTION #
         #####################
         if len(output_sig_case_cont_freqitems_df)>0:
-            print(f"Number of significant combinations that meet the power threshold is {len(output_sig_case_cont_freqitems_df)}")
+            logging.info(f"Number of significant combinations that meet the power threshold is {len(output_sig_case_cont_freqitems_df)}")
             if sample_names_ind == "Y":
                 output_sig_case_cont_freqitems_df = hp.add_sample_info(boolean_input_df, output_sig_case_cont_freqitems_df, output_column)
 
         
         else:
-            print("No significant combinations that meet the specified power threshold")
-            print("Returning ONLY the non-significant combinations")
+            logging.info("No significant combinations that meet the specified power threshold")
+            logging.info("Returning ONLY the non-significant combinations")
             output_sig_case_cont_freqitems_df = sel_case_cont_freqitems_df
 
     else:
-        print("No significant combinations were found after multiple testing correction")
-        print("Returning ONLY the non-significant combinations")
+        logging.info("No significant combinations were found after multiple testing correction")
+        logging.info("Returning ONLY the non-significant combinations")
         output_sig_case_cont_freqitems_df = sel_case_cont_freqitems_df
 
     return output_sig_case_cont_freqitems_df
@@ -161,6 +177,8 @@ def compare_enrichment_modifiers(
 if __name__ == "__main__":
     # load the input df
     boolean_input_df = pd.read_csv("/data6/deepro/computational_pipelines/pyrarecomb/test/input/test_input.csv")
+    logdir = "/data6/deepro/computational_pipelines/pyrarecomb/test/logs_mod"
+    savefile = "/data6/deepro/computational_pipelines/pyrarecomb/test/output/test_output_combo2_mod.csv"
     primary_inputs = pd.read_csv("/data6/deepro/computational_pipelines/pyrarecomb/test/input/primary.txt", header=None).iloc[:, 0].values
     # define all other params
     combo_length = 2
@@ -168,6 +186,8 @@ if __name__ == "__main__":
     max_freq_threshold = 0.25
     primary_input_entities= primary_inputs
 
-    compare_enrichment_modifiers(
+    combo_df = compare_enrichment_modifiers(
         boolean_input_df, combo_length, min_indv_threshold, max_freq_threshold, primary_input_entities
         )
+
+    combo_df.to_csv(savefile, index=False)

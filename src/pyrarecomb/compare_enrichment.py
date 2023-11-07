@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 from scipy.stats import binomtest
 from statsmodels.stats.multitest import multipletests
@@ -127,6 +126,9 @@ def compare_enrichment(
             (sel_case_cont_freqitems_df['Case_Adj_Pval_bonf'] < pval_filter_threshold) &
             (sel_case_cont_freqitems_df['Cont_pvalue_more'] > pval_filter_threshold)
         ]
+    else:
+        raise ValueError("Invalid multiple testing option selected")
+
     multtest_sig_comb_count = all_sig_case_cont_freqitems_df.shape[0]
     # debugging
     logging.info(f"Number of combinations that are significant after multiple testing correction: {multtest_sig_comb_count}")
